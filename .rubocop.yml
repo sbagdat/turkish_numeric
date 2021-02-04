@@ -11,3 +11,13 @@ Style/StringLiteralsInInterpolation:
 
 Layout/LineLength:
   Max: 120
+  Exclude:
+    - 'spec/*'
+
+Style/MixinUsage:
+  Exclude:
+    - 'spec/*'
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/*'
