@@ -3,7 +3,7 @@ require_relative 'turkish_numeric/version'
 module TurkishNumeric
   class TrNum
     MAPPINGS = [
-      %w[sıfır bir iki üç dört beş altı yedi sekiz dokuz].freeze,
+      %w[_ bir iki üç dört beş altı yedi sekiz dokuz].freeze,
       %w[_ on yirmi otuz kırk elli altmış yetmiş seksen doksan].freeze
     ].freeze
     SUBFIX = %w[yüz bin milyon milyar trilyon katrilyon kentilyon sekstilyon septilyon oktilyon
@@ -11,36 +11,40 @@ module TurkishNumeric
                 septendesilyon oktodesilyon novemdesilyon vigintilyon].freeze
 
     def initialize(number)
-      parse(number)
+      parse_sign(number)
+      parse_number_parts(number)
     end
 
     def to_text
-      @decimal.digits.each_slice(3).map.with_index do |triplet, index|
-        translate_triplet(triplet, index)
+      @sign + @decimal.digits.each_slice(3).map.with_index do |triplet, tri_idx|
+        translate_triplet(triplet, tri_idx)
       end.reverse.join
     end
 
     private
 
-    def translate_triplet(triplet, index)
-      triplet.map.with_index do
-        digit = translate_digit(_1, _2, triplet)
-        digit += subfix(_1, index * 3 + _2) unless triplet.all?(&:zero?)
-        digit
+    def parse_sign(number)
+      @sign = number.negative? ? 'eksi ' : ''
+    end
+
+    def translate_triplet(triplet, tri_idx)
+      triplet.map.with_index do |num, idx|
+        digit = translate_digit(num, idx, triplet)
+        "#{digit}#{subfix(num, tri_idx * 3 + idx) unless triplet.all?(&:zero?)}"
       end.reverse
     end
 
-    def parse(number)
-      # TODO: Add number validation check
-      # TODO: Refactor this
-      @decimal, @fraction = number.to_s.split('.').map(&:to_i) << 0
+    def parse_number_parts(number)
+      number = number.abs
+      @decimal  = Integer(number)
+      @fraction = number.to_s.split('.')[1].to_i || 0
     end
 
     def translate_digit(digit, pos, triplet)
       case digit
       when 0 then translate_zero
       when 1 then translate_one(digit, pos, triplet)
-      else MAPPINGS[pos % 3 % 2][digit]
+      else MAPPINGS[pos % 2][digit]
       end
     end
 
@@ -51,7 +55,7 @@ module TurkishNumeric
     def translate_one(digit, pos, triplet)
       return '' if triplet.size == 1 && @decimal.to_s.size == 4
 
-      (0.step(66, 3).to_a - [3]).include?(pos) || pos % 3 == 1 ? MAPPINGS[pos % 3 % 2][digit] : ''
+      (0.step(66, 3).to_a - [3]).include?(pos) || pos % 3 == 1 ? MAPPINGS[pos % 2][digit] : ''
     end
 
     def subfix(digit, pos)
@@ -61,5 +65,3 @@ module TurkishNumeric
     end
   end
 end
-
-p TurkishNumeric::TrNum.new(1000).to_text

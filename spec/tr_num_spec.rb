@@ -39,5 +39,11 @@ RSpec.describe TurkishNumeric do
       expect(TrNum.new(301_000).to_text).to eq 'üçyüzbirbin'
       expect(TrNum.new(34_430_002).to_text).to eq 'otuzdörtmilyondörtyüzotuzbiniki'
     end
+
+    it 'works for negative numbers' do
+      expect(TrNum.new(-1_000).to_text).to eq 'eksi bin'
+    end
   end
+
+
 end
