@@ -1,11 +1,10 @@
 # frozen_string_literal: true
-
 require_relative 'turkish_numeric/version'
 module TurkishNumeric
   class TrNum
     MAPPINGS = [
       %w[sıfır bir iki üç dört beş altı yedi sekiz dokuz].freeze,
-      ['', 'on', 'yirmi', 'otuz', 'kırk', 'elli', 'altmış', 'yetmiş', 'seksen', 'doksan'].freeze
+      %w[_ on yirmi otuz kırk elli altmış yetmiş seksen doksan].freeze
     ].freeze
     SUBFIX = %w[yüz bin milyon milyar trilyon katrilyon kentilyon sekstilyon septilyon oktilyon
                 nonilyon desilyon undesilyon dodesilyon trodesilyon katordesilyon kendesilyon seksdesilyon
@@ -16,28 +15,42 @@ module TurkishNumeric
     end
 
     def to_text
-      @decimal.digits.map.with_index { translate_digit(_1, _2) }.reverse.join
+      @decimal.digits.each_slice(3).map.with_index do |triplet, index|
+        translate_triplet(triplet, index)
+      end.reverse.join
     end
 
     private
 
+    def translate_triplet(triplet, index)
+      triplet.map.with_index do
+        digit = translate_digit(_1, _2, triplet)
+        digit += subfix(_1, index * 3 + _2) unless triplet.all?(&:zero?)
+        digit
+      end.reverse
+    end
+
     def parse(number)
+      # TODO: Add number validation check
+      # TODO: Refactor this
       @decimal, @fraction = number.to_s.split('.').map(&:to_i) << 0
     end
 
-    def translate_digit(digit, pos)
+    def translate_digit(digit, pos, triplet)
       case digit
       when 0 then translate_zero
-      when 1 then translate_one(digit, pos)
+      when 1 then translate_one(digit, pos, triplet)
       else MAPPINGS[pos % 3 % 2][digit]
-      end + subfix(digit, pos)
+      end
     end
 
     def translate_zero
-      @decimal < 10 ? 'sıfır' : ''
+      @decimal.to_s.size == 1 ? 'sıfır' : ''
     end
 
-    def translate_one(digit, pos)
+    def translate_one(digit, pos, triplet)
+      return '' if triplet.size == 1 && @decimal.to_s.size == 4
+
       (0.step(66, 3).to_a - [3]).include?(pos) || pos % 3 == 1 ? MAPPINGS[pos % 3 % 2][digit] : ''
     end
 
@@ -48,3 +61,5 @@ module TurkishNumeric
     end
   end
 end
+
+p TurkishNumeric::TrNum.new(1000).to_text

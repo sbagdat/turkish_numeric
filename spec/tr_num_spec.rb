@@ -34,6 +34,9 @@ RSpec.describe TurkishNumeric do
       expect(TrNum.new(1_000).to_text).to eq 'bin'
       expect(TrNum.new(1_001).to_text).to eq 'binbir'
       expect(TrNum.new(1_111).to_text).to eq 'binyüzonbir'
+      expect(TrNum.new(1_000_000).to_text).to eq 'birmilyon'
+      expect(TrNum.new(2_000_000).to_text).to eq 'ikimilyon'
+      expect(TrNum.new(301_000).to_text).to eq 'üçyüzbirbin'
       expect(TrNum.new(34_430_002).to_text).to eq 'otuzdörtmilyondörtyüzotuzbiniki'
     end
   end
