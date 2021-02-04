@@ -1,27 +1,24 @@
+# frozen_string_literal: true
+#
 require_relative 'turkish_numeric/version'
 module TurkishNumeric
-  class Error < StandardError; end
 
-  # Your code goes here...
   class TrNum
     MAPPINGS = [
       %w[sıfır bir iki üç dört beş altı yedi sekiz dokuz].freeze,
       ['', 'on', 'yirmi', 'otuz', 'kırk', 'elli', 'altmış', 'yetmiş', 'seksen', 'doksan'].freeze
     ].freeze
-
-    HUNDRED  = 'yüz'.freeze
-    THOUSAND = 'bin'.freeze
-    MILLION  = 'milyon'.freeze
-    BILLION  = 'milyar'.freeze
+    SUBFIX = %w[yüz bin milyon milyar trilyon katrilyon kentilyon sekstilyon septilyon oktilyon
+                nonilyon desilyon undesilyon dodesilyon trodesilyon katordesilyon kendesilyon seksdesilyon
+                septendesilyon oktodesilyon novemdesilyon vigintilyon].freeze
 
     def initialize(number)
       parse(number)
     end
 
     def to_text
-      decimal_text = ''
-      @decimal.digits.each_with_index { decimal_text.prepend translate_digit(_1, _2) }
-      decimal_text
+      decimals = @decimal.digits
+      decimals.map.with_index { translate_digit(_1, _2) }.reverse.join
     end
 
     private
@@ -35,14 +32,17 @@ module TurkishNumeric
     def translate_digit(digit, pos)
       return '' if digit.zero? && @decimal >= 10
 
-      str = ''
-      if pos % 3 == 2
-        str += MAPPINGS[pos % 2][digit] unless digit == 1
-        str += (pos % 3 == 2 ? HUNDRED : '')
-      else
-        str += MAPPINGS[pos % 2][digit]
-      end
-      str
+      (digit == 1 ? translate_one(digit, pos) : MAPPINGS[pos % 3 % 2][digit]) + subfix(pos)
+    end
+
+    def translate_one(digit, pos)
+      [0, 6, 9].include?(pos) || pos % 3 == 1 ? MAPPINGS[pos % 3 % 2][digit] : ''
+    end
+
+    def subfix(pos)
+      return SUBFIX[0] if pos == 2
+
+      pos >= 3 && (pos % 3).zero? ? SUBFIX[pos / 3] : ''
     end
   end
 end

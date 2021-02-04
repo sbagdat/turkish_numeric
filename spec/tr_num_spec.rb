@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-
 include TurkishNumeric
 
 RSpec.describe TurkishNumeric do
@@ -29,6 +28,12 @@ RSpec.describe TurkishNumeric do
       expect(TrNum.new(300).to_text).to eq 'üçyüz'
       expect(TrNum.new(153).to_text).to eq 'yüzelliüç'
       expect(TrNum.new(134).to_text).to eq 'yüzotuzdört'
+    end
+
+    it 'works for numbers bigger than 999' do
+      expect(TrNum.new(1_000).to_text).to eq 'bin'
+      expect(TrNum.new(1_001).to_text).to eq 'binbir'
+      expect(TrNum.new(1_111).to_text).to eq 'binyüzonbir'
     end
   end
 end
