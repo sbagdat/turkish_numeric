@@ -21,23 +21,23 @@ RSpec.describe TurkishNumeric do
 
     it 'works for two digits numbers' do
       expect(TrNum.new(30).to_text).to eq 'otuz'
-      expect(TrNum.new(15).to_text).to eq 'onbeş'
+      expect(TrNum.new(15).to_text).to eq 'on beş'
     end
 
     it 'works for three digits numbers' do
-      expect(TrNum.new(300).to_text).to eq 'üçyüz'
-      expect(TrNum.new(153).to_text).to eq 'yüzelliüç'
-      expect(TrNum.new(134).to_text).to eq 'yüzotuzdört'
+      expect(TrNum.new(300).to_text).to eq 'üç yüz'
+      expect(TrNum.new(153).to_text).to eq 'yüz elli üç'
+      expect(TrNum.new(134).to_text).to eq 'yüz otuz dört'
     end
 
     it 'works for numbers bigger than 999' do
       expect(TrNum.new(1_000).to_text).to eq 'bin'
-      expect(TrNum.new(1_001).to_text).to eq 'binbir'
-      expect(TrNum.new(1_111).to_text).to eq 'binyüzonbir'
-      expect(TrNum.new(1_000_000).to_text).to eq 'birmilyon'
-      expect(TrNum.new(2_000_000).to_text).to eq 'ikimilyon'
-      expect(TrNum.new(301_000).to_text).to eq 'üçyüzbirbin'
-      expect(TrNum.new(34_430_002).to_text).to eq 'otuzdörtmilyondörtyüzotuzbiniki'
+      expect(TrNum.new(1_001).to_text).to eq 'bin bir'
+      expect(TrNum.new(1_111).to_text).to eq 'bin yüz on bir'
+      expect(TrNum.new(1_000_000).to_text).to eq 'bir milyon'
+      expect(TrNum.new(2_000_000).to_text).to eq 'iki milyon'
+      expect(TrNum.new(301_000).to_text).to eq 'üç yüz bir bin'
+      expect(TrNum.new(34_430_002).to_text).to eq 'otuz dört milyon dört yüz otuz bin iki'
     end
 
     it 'works for negative numbers' do
@@ -47,9 +47,9 @@ RSpec.describe TurkishNumeric do
 
   context 'floationg point numbers' do
     it 'works' do
-      expect(TrNum.new(213_321_323.321232).to_text).to eq 'ikiyüzonüçmilyonüçyüzyirmibirbinüçyüzyirmiüç tam milyonda üçyüzyirmibirbinikiyüzotuziki'
-      expect(TrNum.new(3.14).to_text).to eq 'üç tam yüzde ondört'
-      expect(TrNum.new(3.00001).to_text).to eq 'üç tam yüzbinde bir'
+      expect(TrNum.new(213_321_323.321232).to_text).to eq 'iki yüz on üç milyon üç yüz yirmi bir bin üç yüz yirmi üç tam milyonda üç yüz yirmi bir bin iki yüz otuz iki'
+      expect(TrNum.new(3.14).to_text).to eq 'üç tam yüzde on dört'
+      expect(TrNum.new(3.00001).to_text).to eq 'üç tam yüz binde bir'
     end
   end
 end

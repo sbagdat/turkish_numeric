@@ -16,21 +16,31 @@ module TurkishNumeric
     end
 
     def to_text
-      @current_processing_part = @decimal
-      decimal_part = @sign + @decimal.digits.each_slice(3).map.with_index do |triplet, tri_idx|
-        translate_triplet(triplet, tri_idx)
-      end.reverse.join
-      return decimal_part if @fraction.zero?
-
-      @current_processing_part = @fraction
-      fractional_part = @fraction.digits.each_slice(3).map.with_index do |triplet, tri_idx|
-        translate_triplet(triplet, tri_idx)
-      end.reverse.join
-
-      "#{decimal_part} tam #{fractional_prefix} #{fractional_part}"
+      text = translate_decimal_part
+      text += ['tam', fractional_prefix] + translate_fractional_part unless @fraction.zero?
+      clean_text(text)
     end
 
     private
+
+    def clean_text(text)
+      text.flatten.delete_if(&:empty?).join(' ').strip.gsub(/\s+/, ' ')
+    end
+
+    def translate_fractional_part
+      translate_partition(@fraction)
+    end
+
+    def translate_decimal_part
+      [@sign] + translate_partition(@decimal)
+    end
+
+    def translate_partition(partition)
+      @current_processing_part = partition
+      partition.digits.each_slice(3).map.with_index do |triplet, tri_idx|
+        translate_triplet(triplet, tri_idx)
+      end.reverse
+    end
 
     def fractional_prefix
       prefix = self.class.new(10**@fraction_size).to_text
@@ -38,7 +48,7 @@ module TurkishNumeric
     end
 
     def parse_sign(number)
-      @sign = number.negative? ? 'eksi ' : ''
+      @sign = number.negative? ? 'eksi' : ''
     end
 
     def translate_triplet(triplet, tri_idx)
@@ -73,9 +83,9 @@ module TurkishNumeric
     end
 
     def subfix(digit, pos)
-      return SUBFIX[0] if pos % 3 == 2 && digit != 0
+      return " #{SUBFIX[0]}" if pos % 3 == 2 && digit != 0
 
-      pos >= 3 && (pos % 3).zero? ? SUBFIX[pos / 3] : ''
+      pos >= 3 && (pos % 3).zero? ? " #{SUBFIX[pos / 3]}" : ''
     end
   end
 end
