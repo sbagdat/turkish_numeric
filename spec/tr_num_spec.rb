@@ -6,9 +6,9 @@ include TurkishNumeric
 RSpec.describe TurkishNumeric do
   it 'parses decimal and float parts correctly' do
     expect(TrNum.new(3).instance_variable_get(:@decimal)).to eq 3
-    expect(TrNum.new(3.14).instance_variable_get(:@float)).to eq 14
+    expect(TrNum.new(3.14).instance_variable_get(:@fraction)).to eq 14
 
-    expect(TrNum.new(8).instance_variable_get(:@float)).to eq 0
+    expect(TrNum.new(8).instance_variable_get(:@fraction)).to eq 0
   end
 
   context 'translates integer values correctly' do
@@ -34,6 +34,7 @@ RSpec.describe TurkishNumeric do
       expect(TrNum.new(1_000).to_text).to eq 'bin'
       expect(TrNum.new(1_001).to_text).to eq 'binbir'
       expect(TrNum.new(1_111).to_text).to eq 'binyüzonbir'
+      expect(TrNum.new(34_430_002).to_text).to eq 'otuzdörtmilyondörtyüzotuzbiniki'
     end
   end
 end
