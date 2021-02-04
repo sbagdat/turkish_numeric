@@ -11,7 +11,7 @@ RSpec.describe TurkishNumeric do
     expect(TrNum.new(8).instance_variable_get(:@fraction)).to eq 0
   end
 
-  context 'translates integer values correctly' do
+  context 'integer numbers' do
     it 'works for single digit numbers' do
       nums = [*0..9]
       translations = %w[sıfır bir iki üç dört beş altı yedi sekiz dokuz]
@@ -45,5 +45,11 @@ RSpec.describe TurkishNumeric do
     end
   end
 
-
+  context 'floationg point numbers' do
+    it 'works' do
+      expect(TrNum.new(213_321_323.321232).to_text).to eq 'ikiyüzonüçmilyonüçyüzyirmibirbinüçyüzyirmiüç tam milyonda üçyüzyirmibirbinikiyüzotuziki'
+      expect(TrNum.new(3.14).to_text).to eq 'üç tam yüzde ondört'
+      expect(TrNum.new(3.00001).to_text).to eq 'üç tam yüzbinde bir'
+    end
+  end
 end

@@ -7,7 +7,7 @@ Style/StringLiterals:
 
 Style/StringLiteralsInInterpolation:
   Enabled: true
-  EnforcedStyle: double_quotes
+  EnforcedStyle: single_quotes
 
 Layout/LineLength:
   Max: 120

@@ -16,12 +16,26 @@ module TurkishNumeric
     end
 
     def to_text
-      @sign + @decimal.digits.each_slice(3).map.with_index do |triplet, tri_idx|
+      @current_processing_part = @decimal
+      decimal_part = @sign + @decimal.digits.each_slice(3).map.with_index do |triplet, tri_idx|
         translate_triplet(triplet, tri_idx)
       end.reverse.join
+      return decimal_part if @fraction.zero?
+
+      @current_processing_part = @fraction
+      fractional_part = @fraction.digits.each_slice(3).map.with_index do |triplet, tri_idx|
+        translate_triplet(triplet, tri_idx)
+      end.reverse.join
+
+      "#{decimal_part} tam #{fractional_prefix} #{fractional_part}"
     end
 
     private
+
+    def fractional_prefix
+      prefix = self.class.new(10**@fraction_size).to_text
+      "#{prefix}#{prefix.end_with?('yüz', 'bin') ? 'de' : 'da'}".gsub('bir', '')
+    end
 
     def parse_sign(number)
       @sign = number.negative? ? 'eksi ' : ''
@@ -35,9 +49,9 @@ module TurkishNumeric
     end
 
     def parse_number_parts(number)
-      number = number.abs
-      @decimal  = Integer(number)
-      @fraction = number.to_s.split('.')[1].to_i || 0
+      @decimal = Integer(number.abs)
+      @fraction_size = (number.to_s.split('.')[1] || 0).size
+      @fraction = Integer(number.to_s.split('.')[1] || 0)
     end
 
     def translate_digit(digit, pos, triplet)
@@ -49,11 +63,11 @@ module TurkishNumeric
     end
 
     def translate_zero
-      @decimal.to_s.size == 1 ? 'sıfır' : ''
+      @current_processing_part.to_s.size == 1 ? 'sıfır' : ''
     end
 
     def translate_one(digit, pos, triplet)
-      return '' if triplet.size == 1 && @decimal.to_s.size == 4
+      return '' if triplet.size == 1 && @current_processing_part.to_s.size == 4
 
       (0.step(66, 3).to_a - [3]).include?(pos) || pos % 3 == 1 ? MAPPINGS[pos % 2][digit] : ''
     end
