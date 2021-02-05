@@ -9,7 +9,8 @@ Gem::Specification.new do |spec|
   spec.email         = ['sbagdat@gmail.com']
 
   spec.summary       = 'Translate any numeric value into Turkish text.'
-  spec.description   = 'Translate any numeric value into Turkish text.'
+  spec.description   = 'Translate any numeric value into Turkish text, ' \
+                       'currency notation, or text representation of money.'
   spec.homepage      = 'https://github.com/sbagdat/turkish_numeric'
   spec.license       = 'MIT'
 

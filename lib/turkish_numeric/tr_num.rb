@@ -5,10 +5,9 @@ module TurkishNumeric
     %w[_ bir iki üç dört beş altı yedi sekiz dokuz].freeze,
     %w[_ on yirmi otuz kırk elli altmış yetmiş seksen doksan].freeze
   ].freeze
-
   SUBFIX = %w[yüz bin milyon milyar trilyon katrilyon kentilyon sekstilyon septilyon oktilyon
-              nonilyon desilyon undesilyon dodesilyon trodesilyon katordesilyon kendesilyon seksdesilyon
-              septendesilyon oktodesilyon novemdesilyon vigintilyon].freeze
+              nonilyon desilyon undesilyon dodesilyon trodesilyon katordesilyon kendesilyon
+              seksdesilyon septendesilyon oktodesilyon novemdesilyon vigintilyon].freeze
 
   class TrNum
     def initialize(number)
@@ -22,22 +21,46 @@ module TurkishNumeric
       clean_text(text, spaces)
     end
 
+    def to_money(symbol: '₺', thousand_sep: '.', penny_sep: ',')
+      validate_pennies
+      "#{symbol}#{decimal_with_thousands(thousand_sep)}#{penny_sep}#{fraction}"
+    end
+
+    def to_money_text(currency: 'TL', sub_currency: 'kr')
+      validate_pennies
+      text = []
+      text = translate_decimal_part + [currency, ','] unless decimal.zero?
+      text += translate_fractional_part + [sub_currency] unless fraction.zero?
+      text.flatten.join.delete(' ')
+    end
+
     private
 
     attr_accessor :sign, :decimal, :fraction, :fraction_size, :current_processing_part
 
-    def clean_text(text, spaces)
-      text = text.flatten.delete_if(&:empty?).join(' ').strip
-      spaces ? text.gsub(/\s+/, ' ') : text.gsub(' ', '').gsub('eksi', 'eksi ')
-      # TODO: Add test for non-spaced representation
+    def parse_sign(number)
+      self.sign = number.negative? ? 'eksi' : ''
     end
 
-    def translate_fractional_part
-      translate_partition(fraction)
+    def parse_number_parts(number)
+      self.decimal       = Integer(number.abs)
+      fraction_str       = number.to_s.split('.')[1] || '0'
+      self.fraction_size = fraction_str.size
+      self.fraction      = Integer(fraction_str, 10)
+    end
+
+    def validate_pennies
+      return if fraction < 100
+
+      self.fraction = fraction.to_s[0..1].to_i
     end
 
     def translate_decimal_part
       [sign] + translate_partition(decimal)
+    end
+
+    def translate_fractional_part
+      translate_partition(fraction)
     end
 
     def translate_partition(partition)
@@ -47,27 +70,11 @@ module TurkishNumeric
       end.reverse
     end
 
-    def fractional_prefix
-      prefix = self.class.new(10**fraction_size).to_text
-      "tam #{prefix}#{prefix.end_with?('yüz', 'bin') ? 'de' : 'da'}".gsub('bir', '')
-    end
-
-    def parse_sign(number)
-      self.sign = number.negative? ? 'eksi' : ''
-    end
-
     def translate_triplet(triplet, tri_idx)
       triplet.map.with_index do |num, idx|
         digit = translate_digit(num, idx, triplet)
         "#{digit}#{subfix(num, tri_idx * 3 + idx) unless triplet.all?(&:zero?)}"
       end.reverse
-    end
-
-    def parse_number_parts(number)
-      self.decimal = Integer(number.abs)
-      fraction_str = number.to_s.split('.')[1] || '0'
-      self.fraction_size = fraction_str.size
-      self.fraction = Integer(fraction_str)
     end
 
     def translate_digit(digit, pos, triplet)
@@ -76,6 +83,11 @@ module TurkishNumeric
       when 1 then translate_one(digit, pos, triplet)
       else MAPPINGS[pos % 2][digit]
       end
+    end
+
+    def fractional_prefix
+      prefix = self.class.new(10**fraction_size).to_text
+      "tam #{prefix}#{prefix.end_with?('yüz', 'bin') ? 'de' : 'da'}".gsub('bir', '')
     end
 
     def translate_zero
@@ -93,6 +105,16 @@ module TurkishNumeric
       return " #{SUBFIX[0]}" if sub_pos == 2 && !digit.zero?
 
       pos >= 3 && sub_pos.zero? ? " #{SUBFIX[pos / 3]}" : ''
+    end
+
+    def clean_text(text, spaces)
+      text = text.flatten.delete_if(&:empty?).join(' ').strip
+      spaces ? text.gsub(/\s+/, ' ') : text.gsub(' ', '').gsub('eksi', 'eksi ')
+      # TODO: Add test for non-spaced representation
+    end
+
+    def decimal_with_thousands(thousand_sep)
+      decimal.digits.each_slice(3).map(&:join).join(thousand_sep).reverse
     end
   end
 end

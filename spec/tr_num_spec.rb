@@ -49,8 +49,10 @@ RSpec.describe TurkishNumeric do
     { 0.5 => 'sıfır tam onda beş',
       0.555 => 'sıfır tam binde beş yüz elli beş',
       3.14 => 'üç tam yüzde on dört',
+      12.0012 => 'on iki tam on binde on iki',
       1234.00001 => 'bin iki yüz otuz dört tam yüz binde bir',
-      213_321_323.321232 => 'iki yüz on üç milyon üç yüz yirmi bir bin üç yüz yirmi üç tam milyonda üç yüz yirmi bir bin iki yüz otuz iki' }.freeze
+      213_321_323.321232 => 'iki yüz on üç milyon üç yüz yirmi bir bin üç yüz yirmi üç tam milyonda üç yüz yirmi bir bin iki yüz otuz iki',
+      0.9999999999999999 => 'sıfır tam on katrilyonda dokuz katrilyon dokuz yüz doksan dokuz trilyon dokuz yüz doksan dokuz milyar dokuz yüz doksan dokuz milyon dokuz yüz doksan dokuz bin dokuz yüz doksan dokuz' }.freeze
   end
 
   context 'parsing parts' do
@@ -70,19 +72,50 @@ RSpec.describe TurkishNumeric do
     end
   end
 
-  context 'translates integer numbers into text' do
-    it 'works for samples' do
-      sample_integers.each do |num, text|
-        expect(TrNum.new(num).to_text).to eq text
+  context '#to_text' do
+    context 'translates integer numbers into text' do
+      it 'works for samples' do
+        sample_integers.each do |num, text|
+          expect(TrNum.new(num).to_text).to eq text
+        end
+      end
+    end
+
+    context 'translates floating point numbers into text' do
+      it 'works for samples' do
+        sample_floats.each do |num, text|
+          expect(TrNum.new(num).to_text).to eq text
+        end
       end
     end
   end
 
-  context 'translates floating point numbers into text' do
-    it 'works for samples' do
-      sample_floats.each do |num, text|
-        expect(TrNum.new(num).to_text).to eq text
-      end
+  context '#to_money' do
+    it 'converts numerical format as currency' do
+      expect(TrNum(234.45).to_money).to eq '₺234,45'
+      expect(TrNum(0.115).to_money).to eq '₺0,11'
+    end
+
+    it 'uses thousand seperators' do
+      expect(TrNum(12_332.45).to_money).to eq '₺12.332,45'
+      expect(TrNum(343_211_122_332.45).to_money).to eq '₺343.211.122.332,45'
+    end
+
+    it 'works with custom symbol and seperators' do
+      expect(TrNum(12_332.45).to_money(symbol: '€', thousand_sep: ',', penny_sep: '.')).to eq '€12,332.45'
+    end
+  end
+
+  context '#to_money_text' do
+    it 'translates money to turkish lira' do
+      expect(TrNum(234.45).to_money_text).to eq 'ikiyüzotuzdörtTL,kırkbeşkr'
+      expect(TrNum(234.05).to_money_text).to eq 'ikiyüzotuzdörtTL,beşkr'
+      expect(TrNum(600_000.125).to_money_text).to eq 'altıyüzbinTL,onikikr'
+      expect(TrNum(0.15).to_money_text).to eq 'onbeşkr'
+    end
+
+    it 'translates money to custom currency' do
+      expect(TrNum(234.45).to_money_text(currency: 'USD', sub_currency: 'sent')).to eq 'ikiyüzotuzdörtUSD,kırkbeşsent'
     end
   end
 end
