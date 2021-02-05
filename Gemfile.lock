@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    turkish_numeric (0.1.0)
+    turkish_numeric (0.0.1)
 
 GEM
   remote: https://rubygems.org/
