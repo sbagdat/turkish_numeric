@@ -49,6 +49,7 @@ GEM
 
 PLATFORMS
   x86_64-darwin-19
+  x86_64-linux
 
 DEPENDENCIES
   rake (~> 13.0)
@@ -59,4 +60,4 @@ DEPENDENCIES
   turkish_numeric!
 
 BUNDLED WITH
-   2.2.5
+   2.2.8

@@ -21,3 +21,9 @@ Style/MixinUsage:
 Metrics/BlockLength:
   Exclude:
     - 'spec/*'
+
+Style/Documentation:
+  Enabled: false
+
+Naming/MethodName:
+  Enabled: false
