@@ -9,59 +9,60 @@ module TurkishNumeric
               nonilyon desilyon undesilyon dodesilyon trodesilyon katordesilyon kendesilyon
               seksdesilyon septendesilyon oktodesilyon novemdesilyon vigintilyon].freeze
 
+  # Represents a number in Turkish language
   class TrNum
+    include NumberPresenter
+
+    # A new instance of TrNum
+    #
+    # @param [Integer, Float] number
+    # @return [TurkishNumeric::TrNum]
     def initialize(number)
-      parse_sign(number)
-      parse_number_parts(number)
+      @sign = 'eksi' if number.negative?
+      @decimal = Integer(number.abs)
+      fraction_str = number.to_s.split('.')[1] || '0'
+      @fraction_size = fraction_str.size
+      @fraction = Integer(fraction_str, 10)
     end
 
-    def to_text(spaces: true)
-      text = translate_decimal_part
-      text += [fractional_prefix] + translate_fractional_part unless fraction.zero?
-      clean_text(text, spaces)
+    # Translate numeric value into Turkish text
+    #
+    # @return [String]
+    def to_text
+      decimal_part = translate_partition(decimal)
+      fractional_part = fraction.zero? ? nil : [fractional_prefix, translate_partition(fraction)]
+      text_spaced(sign, decimal_part, fractional_part)
     end
 
+    # Translate numeric value into currency notation
+    #
+    # @param [String] symbol
+    # @param [String] thousand_sep
+    # @param [String] penny_sep
+    # @return [String]
     def to_money(symbol: '₺', thousand_sep: '.', penny_sep: ',')
-      validate_pennies
-      "#{symbol}#{decimal_with_thousands(thousand_sep)}#{penny_sep}#{fraction}"
+      [symbol,
+       thousands_separated(decimal, sep: thousand_sep),
+       penny_sep,
+       to_pennies(fraction)].join
     end
 
+    # Translate numeric value into text representaion of money
+    #
+    # @param [String] currency
+    # @param [String] sub_currency
+    # @return [String]
     def to_money_text(currency: 'TL', sub_currency: 'kr')
-      validate_pennies
-      text = []
-      text = translate_decimal_part + [currency, ','] unless decimal.zero?
-      text += translate_fractional_part + [sub_currency] unless fraction.zero?
-      text.flatten.join.delete(' ')
+      pennies = to_pennies(fraction)
+      decimal_part = decimal.zero? ? nil : [translate_partition(decimal), currency, ',']
+      fractional_part = pennies&.zero? ? nil : [translate_partition(pennies), sub_currency]
+      text_non_spaced(sign, decimal_part, fractional_part)
     end
 
     private
 
-    attr_accessor :sign, :decimal, :fraction, :fraction_size, :current_processing_part
-
-    def parse_sign(number)
-      self.sign = number.negative? ? 'eksi' : ''
-    end
-
-    def parse_number_parts(number)
-      self.decimal       = Integer(number.abs)
-      fraction_str       = number.to_s.split('.')[1] || '0'
-      self.fraction_size = fraction_str.size
-      self.fraction      = Integer(fraction_str, 10)
-    end
-
-    def validate_pennies
-      return if fraction < 100
-
-      self.fraction = fraction.to_s[0..1].to_i
-    end
-
-    def translate_decimal_part
-      [sign] + translate_partition(decimal)
-    end
-
-    def translate_fractional_part
-      translate_partition(fraction)
-    end
+    attr_reader :sign, :decimal, :fraction_size, :fraction
+    attr_accessor :current_processing_part
 
     def translate_partition(partition)
       self.current_processing_part = partition
@@ -73,7 +74,8 @@ module TurkishNumeric
     def translate_triplet(triplet, tri_idx)
       triplet.map.with_index do |num, idx|
         digit = translate_digit(num, idx, triplet)
-        "#{digit}#{subfix(num, tri_idx * 3 + idx) unless triplet.all?(&:zero?)}"
+        subfix = triplet.all?(&:zero?) ? nil : subfix(num, tri_idx * 3 + idx)
+        [digit, subfix]
       end.reverse
     end
 
@@ -86,35 +88,25 @@ module TurkishNumeric
     end
 
     def fractional_prefix
-      prefix = self.class.new(10**fraction_size).to_text
-      "tam #{prefix}#{prefix.end_with?('yüz', 'bin') ? 'de' : 'da'}".gsub('bir', '')
+      prefix = self.class.new(10**fraction_size).to_text.gsub('bir', '').lstrip
+      "tam #{prefix}#{prefix.end_with?('yüz', 'bin') ? 'de' : 'da'}"
     end
 
     def translate_zero
-      current_processing_part.to_s.size == 1 ? 'sıfır' : ''
+      current_processing_part.to_s.size == 1 ? 'sıfır' : nil
     end
 
     def translate_one(digit, pos, triplet)
-      return '' if triplet.size == 1 && current_processing_part.to_s.size == 4
+      return nil if triplet.size == 1 && current_processing_part.to_s.size == 4
 
-      0.step(66, 3).include?(pos) || pos % 3 == 1 ? MAPPINGS[pos % 2][digit] : ''
+      0.step(66, 3).include?(pos) || pos % 3 == 1 ? MAPPINGS[pos % 2][digit] : nil
     end
 
     def subfix(digit, pos)
       sub_pos = pos % 3
-      return " #{SUBFIX[0]}" if sub_pos == 2 && !digit.zero?
+      return SUBFIX[0] if sub_pos == 2 && !digit.zero?
 
-      pos >= 3 && sub_pos.zero? ? " #{SUBFIX[pos / 3]}" : ''
-    end
-
-    def clean_text(text, spaces)
-      text = text.flatten.delete_if(&:empty?).join(' ').strip
-      spaces ? text.gsub(/\s+/, ' ') : text.gsub(' ', '').gsub('eksi', 'eksi ')
-      # TODO: Add test for non-spaced representation
-    end
-
-    def decimal_with_thousands(thousand_sep)
-      decimal.digits.each_slice(3).map(&:join).join(thousand_sep).reverse
+      pos >= 3 && sub_pos.zero? ? SUBFIX[pos / 3] : nil
     end
   end
 end

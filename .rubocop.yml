@@ -1,5 +1,6 @@
 AllCops:
   TargetRubyVersion: 2.7.0
+  NewCops: enable
 
 Style/StringLiterals:
   Enabled: true
@@ -22,8 +23,3 @@ Metrics/BlockLength:
   Exclude:
     - 'spec/*'
 
-Style/Documentation:
-  Enabled: false
-
-Naming/MethodName:
-  Enabled: false
