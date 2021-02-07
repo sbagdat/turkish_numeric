@@ -14,7 +14,7 @@ module TurkishNumeric
 
     # Creates single spaced string representation of the argument
     #
-    # @param [Array] parts
+    # @param [[String, nil]] parts
     # @return [String]
     def text_spaced(*parts)
       parts.flatten.compact.join(' ')
@@ -22,10 +22,10 @@ module TurkishNumeric
 
     # Creates non-spaced string representation of the argument
     #
-    # @param [Array] parts
+    # @param [[String, nil]] parts
     # @return [String]
     def text_non_spaced(*parts)
-      parts.join
+      parts.compact.join
     end
 
     # Extracts pennies from the argument
